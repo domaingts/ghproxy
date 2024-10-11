@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/domaingts/ghproxy/pkg/cloudflare"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -21,6 +22,7 @@ var (
 	address string
 	tlsPath string
 	auth    string
+	cdn bool
 )
 
 // startCmd represents the start command
@@ -44,6 +46,7 @@ func init() {
 	startCmd.Flags().StringVarP(&address, "address", "a", "", "Listening port.")
 	startCmd.Flags().StringVar(&tlsPath, "tls", "", "Certificate file path.")
 	startCmd.Flags().StringVar(&auth, "auth", "", "Basic auth for http.")
+	startCmd.Flags().BoolVarP(&cdn, "cdn", "c", false, "Use cloudflare cdn.")
 }
 
 var (
@@ -86,6 +89,13 @@ func run() {
 	gin.SetMode(gin.TestMode)
 	r := gin.Default()
 	r.UseH2C = true
+	if cdn {
+		err := r.SetTrustedProxies(cloudflare.CloudflareIPs)
+		if err != nil {
+			logger.Error("failed to set trusted proxies", zap.Error(err))
+			return
+		}
+	}
 	if auth != "" {
 		cred := strings.Split(auth, ":")
 		r.Use(gin.BasicAuth(gin.Accounts{
