@@ -1,0 +1,26 @@
+project_name: ghproxy
+
+version: 2
+
+snapshot:
+  version_template: "{{ .Version }}"
+
+builds:
+  - id: universal
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w
+    goos:
+      - linux
+    goarch:
+      - amd64
+    goamd64: 
+      - v3
+      - v2
+    main: ./
+    binary: ghproxy
+
+archives:
+  - name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}-{{ .Amd64 }}"
+    format: tar.gz
